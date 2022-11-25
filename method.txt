@@ -1,0 +1,36 @@
+
+名称 描述
+get_price 获取历史数据，可查询多个标的多个数据字段，返回数据格式为 DataFrame
+history 获取历史数据，可查询多个标的单个数据字段，返回数据格式为 DataFrame 或 Dict(字典)
+        attribute_history 获取历史数据，可查询单个标的多个数据字段，返回数据格式为 DataFrame 或 Dict(字典)
+get_bars 获取历史数据(包含快照数据)，可查询单个或多个标的多个数据字段，返回数据格式为 numpy.ndarray或DataFrame
+get_current_tick♠ 获取最新的 tick 数据
+get_ticks 获取股票、期货、50ETF期权、股票指数及场内基金的实时及历史 tick 数据
+get_current_data ♠ 获取当前时间数据
+get_extras 获取基金单位/累计净值，期货结算价/持仓量等
+get_all_factors 获取聚宽因子库中所有因子的信息
+get_factor_values 质量、基础、情绪、成长、风险、每股等数百个因子数据
+get_factor_kanban_values 获取因子看板列表数据
+get_fundamentals 查询财务数据
+get_fundamentals_continuously 查询多日的财务数据
+finance.run_query 深沪港通股东信息等数据
+macro.run_query 获取聚宽宏观经济数据
+get_billboard_list 获取龙虎榜数据
+get_locked_shares 获取限售解禁数据
+get_index_stocks 获取指数成份股
+get_index_weights 获取指数成分股权重
+get_industry_stocks 获取行业成份股
+get_concept_stocks 获取概念成份股
+get_industries 获取行业列表
+get_concepts 获取概念列表
+get_all_securities 获取所有标的信息
+get_security_info 获取单个标的信息
+get_industry 查询股票所属行业
+get_all_trade_days 获取所有交易日
+get_trade_days 获取指定范围交易日
+get_money_flow 获取资金流信息
+get_concept 获取股票所属概念板块
+get_call_auction 获取指定时间区间内集合竞价时的 tick 数据
+get_trade_day 根据标的获取指定时刻标的对应的交易日
+get_history_fundamentals 获取多个季度/年度的历史财务数据
+get_valuation 获取多个标的在指定交易日范围内的市值表数据
