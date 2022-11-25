@@ -21,7 +21,7 @@ def test_get_price():
     flds  = ["datetime","close"]
     t0 = t.time()
 
-    df  = dp.get_price(codes,start_date,end_date,frequency,fq) ## data为返回的是pd.dataframe格式的数据；
+    df  = db.get_price(codes,start_date,end_date,frequency,fq) ## data为返回的是pd.dataframe格式的数据；
     print(f"code : {codes} df shape : {df.shape} ")
     print(f"-------------{fq}--------------------")
     print(f"{df.head()}")
@@ -63,6 +63,7 @@ def test_get_trade_days():
 if __name__== "__main__" :
     #db.auth("178*******","6******") # 可以明文输入，可也以在环境变量中设置
     db.auth() #从环境变量设置相关变量，建议以"dbpystream_username"，"dbpystream_password"来命名
+    test_get_price()
     test_get_all_securities()
     test_get_index_weights()
     test_get_industry_stocks()
