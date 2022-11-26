@@ -30,7 +30,7 @@ dbpystream API 主要为已经购买了数据供应商API服务的企业内部�
 
 ## dbpystream API展望
 
-目前，data api 市场和服务还是较初级的阶段，感谢市场上为数不多的数据提供商，可以让大家有了接触api服务的可能。在此基础上，dbpystream api才有了二次的可能，在此特别致谢，joinquant, mamamiya、同花顺等数据服务厂商，也感谢为市场提供免费数据的sina财经等网站。
+目前，data api 市场和服务还是较初级的阶段，感谢市场上为数不多的数据提供商，可以让大家有了接触api服务的可能。在此基础上，dbpystream api才有了二次的可能，在此特别致谢，joinquant, tushare、同花顺等数据服务厂商，也感谢为市场提供免费数据的sina财经等网站。
 
 目前，dbpystream主要的数据服务商有：jqdatasdk, 未来计划支持更多。
 
