@@ -237,10 +237,10 @@ def check_index_stocks_params(params) ->bool:
 
     if "date" in params and not is_valid_date(params["date"]):
         return False
-    
     return True
-def check_method_params(params,method_name) -> bool : 
 
+def check_method_params(params,method_name) -> bool : 
+    #注：部分函数还没上线，会返回False
     if method_name == "get_price":
         return check_get_price_params(params)
     elif method_name == "get_all_securities":
