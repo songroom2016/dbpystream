@@ -68,7 +68,7 @@ class LDClient(object):
         except RequestException as e:
             raise Exception(f"get_token -> 请求出现异常，具体原因：{str(e)}")
         except Exception as e:  
-            raise Exception("get_token -> 系统出现异常，具体原因 :{str(e)}")
+            raise Exception(f"get_token -> 系统出现异常，具体原因 :{str(e)}")
         else:
             if response.status_code == 200:
                 token = response.text
