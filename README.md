@@ -104,6 +104,7 @@ get_price:
 ```python
 
     import pandas as pd 
+    import dbpystream
     import dbpystream.api as db
 
     start_date = "2020-09-30" # 日期字符串格式
