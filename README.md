@@ -104,16 +104,16 @@ get_price:
 ```python
 
     import pandas as pd 
-    import dbpystream
+    import dbpystream.api as db
 
     start_date = "2020-09-30" # 日期字符串格式
     end_date   = "2022-11-01" # 日期字符串格式
     frequency  = "minute" # daily
     fq         = "post" # pre:前复权[默认]，None
-    auth() # 第一次调用，需要登陆一下
+    db.auth() # 第一次调用，需要登陆一下
     codes = ["159707.XSHE"] #603619.XSHG,ZN2210.XSGE
     for security in codes:
-        df  = get_price(security,start_date,end_date,frequency,fq) ## data为返回的是pd.dataframe格式的数据；
+        df  = db.get_price(security,start_date,end_date,frequency,fq) ## data为返回的是pd.dataframe格式的数据；
         print(f"code : {security} df shape : {df.shape} ")
         print(f"{df.head()}")
 
