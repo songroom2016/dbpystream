@@ -110,7 +110,7 @@ get_price:
     end_date   = "2022-11-01" # 日期字符串格式
     frequency  = "minute" # daily
     fq         = "post" # pre:前复权[默认]，None
-    db.auth() # 第一次调用，需要登陆一下
+    db.auth() # 第一次调用，需要登陆一下，这里默认从环境变量中已经设置好；或者db.auth("********","******")的显示设置账户和密码的方式。
     codes = ["159707.XSHE"] #603619.XSHG,ZN2210.XSGE
     for security in codes:
         df  = db.get_price(security,start_date,end_date,frequency,fq) ## data为返回的是pd.dataframe格式的数据；
