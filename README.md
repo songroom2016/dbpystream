@@ -180,7 +180,7 @@ end
 # rust web api 模式
 
 ```rust
-use reqwest::{self, Client, IntoUrl, Response};
+use reqwest::{self, Client,Response};
 use std::time::{Duration, SystemTime};
 const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
 const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
@@ -188,10 +188,10 @@ const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
     let sys_time = SystemTime::now();
-    let mut myclient  = MyClient::default_db();
-    myclient.get_token_db().await;
+    let mut myclient  = MyClient::default();
+    myclient.get_token().await;
     println!("token :{:?}",myclient.token);
-    let data = myclient.get_price_db().await;
+    let data = myclient.get_price().await;
     let costtime = sys_time.elapsed().unwrap();
     println!("cost time :{:?} count :{:?}",costtime);
     Ok(())
@@ -204,7 +204,7 @@ struct MyClient{
     mac : String,
     requestid :String,
     token :Option<String>,
-    lang: String, //指前端开发语言,python,julia
+    lang: String, //指前端开发语言,python,julia,rust......
 }
 #[derive(Debug)]
 struct Account{
@@ -221,7 +221,7 @@ impl Account{
 }
 
 impl MyClient{
-    pub fn default_db()-> Self{
+    pub fn default()-> Self{
         MyClient{
             client: Client::new(),
             account: Account::default(),
@@ -231,17 +231,8 @@ impl MyClient{
             lang :"rust".into()
         }
     } 
-    pub fn default_jq()->Self{
-        MyClient{
-            client: Client::new(),
-            account: Account::default_jq(),
-            mac : "".into(),
-            requestid: "1".into(),
-            token: None,
-            lang: "rust".into(),
-        }
-    }
-    async fn get_token_db(&mut self){
+
+    async fn get_token(&mut self){
         let response = self.client
         .post(LOGIN_URL)
         .header("Content-Type","application/json")
@@ -256,7 +247,7 @@ impl MyClient{
         .expect("send login->");
         self.token = Some(response.text().await.unwrap());
     }
-    async fn get_price_db(&mut self) ->String {
+    async fn get_price(&mut self) ->String {
         let sys_time = SystemTime::now();
         if let Some(token) = &self.token{
             let response = self.client
@@ -283,8 +274,6 @@ impl MyClient{
             return "get_price Error".into()
         }
     }
-
- 
 
 }
 
