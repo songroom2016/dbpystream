@@ -44,7 +44,7 @@ dbpystream只对企业内部提供数据服务,也期待能与数据供应商一
 
 ```
 
-## 实例说明
+## python sdk 实例说明
 
 以下jqdatasdk为例，本库提供了jqdatasdk类似的支持，主要函数签名及参数基本上与jqdatasdk一致
 
@@ -99,7 +99,7 @@ get_price:
     4 2022-01-04 09:34:00  23.41  23.41  23.41  23.41   5507.0   128928.0
 ```
 
-## 整体调用参考代码
+## python sdk 整体调用参考代码
 
 ```python
 
@@ -131,6 +131,164 @@ code : 159707.XSHE df shape : (52320, 8)
 4  159707.XSHE 2021-11-12 09:35:00  1.005  1.006  1.007  1.005   4935000.0   4966423.0
 ```
 
+此外，你也可以通过其它语言restful api的模式调用。
+
+# julia web api 模式
+```julia
+using HTTP;
+using JSON;
+
+token = get_token();
+println("获得token : {}",token);
+println("请等待获取数据......");
+codes = get_all_securities(token,"stock","2021-02-01")
+@time data = get_price(token)
+println("数据如下：",data);
+
+function get_token()
+    url ="http://47.122.40.16/login";
+    username ="" # 根据已知的账户和密码填写
+    password ="" # 根据已知的账户和密码填写
+    params= Dict("username" => username,"password" =>password,"mac" =>"","request_id"=>"") # username和password必填
+    res = HTTP.post(url, body=JSON.json(params))
+    text = String(res.body)
+    return text 
+end
+function get_price(token)
+    url  ="http://47.122.40.16/history_price";
+     headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"mac"=>"","request_id"=>"","lang" =>"julia") # "Authorization"为必填字段
+    # 根据自已需求设置参数
+    params  = Dict("security" => "600036.XSHG",
+    "start_date"=> "2021-01-01",
+    "end_date"=>"2021-01-07",
+    "frequency"=>"daily",
+    "fq"=>"pre",
+    "fields"=>"None");
+    res = HTTP.request("POST",url, body=JSON.json(params),headers = headers)#,response_stream=stream,decompress=false)
+    return String(res.body)
+end
+function get_all_securities(token::String,code::String,date::String)
+    url  = "http://47.122.40.16/all_securities";
+    headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"mac"=>"","request_id"=>"","lang" =>"julia")
+    params  = Dict("types" => code,"date" =>date);
+    res = HTTP.post(url, body=JSON.json(params),headers =headers)
+    return String(res.body);
+end
+
+
+```
+# rust web api 模式
+
+```rust
+use reqwest::{self, Client, IntoUrl, Response};
+use std::time::{Duration, SystemTime};
+const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
+const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
+
+#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+    let sys_time = SystemTime::now();
+    let mut myclient  = MyClient::default_db();
+    myclient.get_token_db().await;
+    println!("token :{:?}",myclient.token);
+    let data = myclient.get_price_db().await;
+    let costtime = sys_time.elapsed().unwrap();
+    println!("cost time :{:?} count :{:?}",costtime);
+    Ok(())
+}
+
+#[derive(Debug)]
+struct MyClient{
+    client: Client,
+    account: Account,
+    mac : String,
+    requestid :String,
+    token :Option<String>,
+    lang: String, //指前端开发语言,python,julia
+}
+#[derive(Debug)]
+struct Account{
+    username : String,
+    password : String,
+}
+impl Account{
+    pub fn default()->Self{
+        Account{
+            username:"*******".into(),//根据真实信息情况填写
+            password:"*******".into(),//根据真实信息情况填写
+        }
+    }
+}
+
+impl MyClient{
+    pub fn default_db()-> Self{
+        MyClient{
+            client: Client::new(),
+            account: Account::default(),
+            mac : "".into(),//这个无所谓
+            requestid: "1".into(),//这个也无所谓
+            token: None,
+            lang :"rust".into()
+        }
+    } 
+    pub fn default_jq()->Self{
+        MyClient{
+            client: Client::new(),
+            account: Account::default_jq(),
+            mac : "".into(),
+            requestid: "1".into(),
+            token: None,
+            lang: "rust".into(),
+        }
+    }
+    async fn get_token_db(&mut self){
+        let response = self.client
+        .post(LOGIN_URL)
+        .header("Content-Type","application/json")
+        .json(&serde_json::json!({
+            "username": &self.account.username,
+            "password": &self.account.password,
+            "mac": &self.mac,
+            "request_id":&self.requestid
+        }))
+        .send()
+        .await
+        .expect("send login->");
+        self.token = Some(response.text().await.unwrap());
+    }
+    async fn get_price_db(&mut self) ->String {
+        let sys_time = SystemTime::now();
+        if let Some(token) = &self.token{
+            let response = self.client
+            .post(GET_PRICE_URL)
+            .header("Content-Type","application/json")
+            .header("Authorization",token)
+            .header("lang",&self.lang)
+            .json(&serde_json::json!({
+                "security":"600036.XSHG",
+                "start_date": "2021-01-01",
+                "end_date": "2021-01-05",
+                "frequency": "daily", //daily,minute
+                "fq":"pre",
+                "fields":"None"
+            }))
+            .send()
+            .await
+            .expect("send db get_price ->");
+            let  text = response.text().await.unwrap(); 
+            let costtime = sys_time.elapsed().unwrap();
+            println!("cost time :{:?}",costtime);
+            return text
+        }else{
+            return "get_price Error".into()
+        }
+    }
+
+ 
+
+}
+
+```
 这样，你就可以开始使用dbpystream了。
 
 如果有任何问题，欢迎邮件至rustroom@163.com。
