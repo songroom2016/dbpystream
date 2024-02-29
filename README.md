@@ -130,11 +130,32 @@ code : 159707.XSHE df shape : (52320, 8)
 3  159707.XSHE 2021-11-12 09:34:00  1.007  1.008  1.009  1.007   1583300.0   1596114.0
 4  159707.XSHE 2021-11-12 09:35:00  1.005  1.006  1.007  1.005   4935000.0   4966423.0
 ```
+优先建议：
 
-此外，你也可以通过其它语言restful api的模式调用。
+使用python来调用数据服务，获得更好的性能，主要原因是服务端会根据不同语言进行不同的序列化处理。
+在python调用时，会采用pickle序列化方式,但其它语言无法解析。
+而采用其它语言，会通过json序列化方式，在网络传输上容量更大，故花时会更多。后续这个序列化方式还有待将一步的优化。
 
-# julia web api 模式
+如果你还是想通过其它语言，可以通过restful api的模式调用服务，只是性能上还较大损失。
+## python web api模式
+```python
+# 具体代码略，以下为主要关键流程代码,不是全部代码【特别说明】
+import requests
+import pyzstd
+import pandas as pd
+
+df = pd.DataFrame()
+response = requests.post(url,data = data,headers = headers) 
+result = response.content #得到服务端传过来的zstd压缩后的字节流文件 
+_msg = pyzstd.decompress(result) #默认是zstd方式解压
+decompress_data = pickle.loads(_msg) # 需要通过pickle来反序列化，得到dict
+df   = pd.DataFrame(decompress_data) # 生产datafram
+
+```
+
+## julia web api 模式
 ```julia
+# 需要注意的是，julia需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
 using HTTP;
 using JSON;
 
@@ -177,9 +198,10 @@ end
 
 
 ```
-# rust web api 模式
+## rust web api 模式
 
 ```rust
+// 需要注意的是，rust 需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
 use reqwest::{self, Client,Response};
 use std::time::{Duration, SystemTime};
 const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
