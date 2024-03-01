@@ -38,7 +38,9 @@ class LDClient(object):
             headers = {"Content-Type": "application/json",
                 "Authorization": self._token,
                 "mac": utils.get_mac_address(),
-                "request_id": str(next(self._request_id_generator))
+                "request_id": str(next(self._request_id_generator)),
+                "lang":"python",
+                "compression":"zstd",
                 }
             return headers
         else:
