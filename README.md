@@ -187,11 +187,10 @@ function get_price(token)
     "fq"=>"pre",
     "fields"=>"None"); ##根据自己的设置来填写参数
     res = HTTP.request("POST",get_price_url, body=JSON.json(params),headers = headers)
-    data = res.body
     if "compression" in keys(headers) && headers["compression"] == "zstd"
-        return String(transcode(ZstdDecompressor, data))
+        return String(transcode(ZstdDecompressor, res.body))
     else
-        return data
+        return res.body
     end
 end
 
@@ -199,11 +198,11 @@ function get_all_securities(token::String,code::String,date::String)
     url  = "http://47.122.40.16/all_securities";
     headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"lang" =>"julia","compression"=>"zstd")
     params  = Dict("types" => code,"date" =>date);
-    data = HTTP.post(url, body=JSON.json(params),headers =headers)
+    res = HTTP.post(url, body=JSON.json(params),headers =headers)
     if "compression" in keys(headers) && headers["compression"] == "zstd"
-        return String(transcode(ZstdDecompressor, data))
+        return String(transcode(ZstdDecompressor, res.body))
     else
-        return data.body
+        return res.body
     end
 end
 
