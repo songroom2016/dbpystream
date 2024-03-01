@@ -156,7 +156,7 @@ df   = pd.DataFrame(decompress_data) # 生产datafram
 
 ## julia web api 模式
 ```julia
-# 需要注意的是，julia需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
+# 注意headers中lang和compression字段的设置
 using HTTP;
 using JSON;
 using CodecZstd; 
@@ -211,7 +211,8 @@ end
 ## rust web api 模式
 
 ```rust
-// 需要注意的是，rust 需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
+// 注意headers中lang和compression字段的设置。
+// 这里采用了tokio异步框架方式，也可以选择纯reqwest库的方式。
 use reqwest::{self, Client,Response};
 use std::time::{Duration, SystemTime};
 use ruzstd::frame_decoder::{self,BlockDecodingStrategy};
@@ -238,7 +239,7 @@ struct MyClient{
     mac : String,
     requestid :String,
     token :Option<String>,
-    lang: String, //指前端开发语言,python,julia,rust......
+    lang: String, //指前端开发语言,python,rust......
     compression: String,
 }
 #[derive(Debug)]
@@ -260,8 +261,8 @@ impl MyClient{
         MyClient{
             client: Client::new(),
             account: Account::default(),
-            mac : "".into(),//这个无所谓
-            requestid: "1".into(),//这个也无所谓
+            mac : "".into(),//这个可随便填
+            requestid: "1".into(),//这个可随便填写
             token: None,
             lang :"rust".into(),
             compression:"zstd".into(),
@@ -305,6 +306,8 @@ impl MyClient{
             let decoded: Vec<u8> = zstd::decode_all(raw_bytes.as_slice()).unwrap();
             let text = std::str::from_utf8(&decoded).unwrap();
             let costtime = sys_time.elapsed().unwrap();
+            println!("cost time :{:?}",costtime);
+            return String::from(text)
         }else{
             return "get_price Error".into()
         }
