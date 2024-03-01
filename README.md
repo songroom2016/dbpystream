@@ -214,6 +214,8 @@ end
 // 需要注意的是，rust 需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
 use reqwest::{self, Client,Response};
 use std::time::{Duration, SystemTime};
+use ruzstd::frame_decoder::{self,BlockDecodingStrategy};
+
 const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
 const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
 
@@ -237,6 +239,7 @@ struct MyClient{
     requestid :String,
     token :Option<String>,
     lang: String, //指前端开发语言,python,julia,rust......
+    compression: String,
 }
 #[derive(Debug)]
 struct Account{
@@ -260,7 +263,8 @@ impl MyClient{
             mac : "".into(),//这个无所谓
             requestid: "1".into(),//这个也无所谓
             token: None,
-            lang :"rust".into()
+            lang :"rust".into(),
+            compression:"zstd".into(),
         }
     } 
 
@@ -271,8 +275,6 @@ impl MyClient{
         .json(&serde_json::json!({
             "username": &self.account.username,
             "password": &self.account.password,
-            "mac": &self.mac,
-            "request_id":&self.requestid
         }))
         .send()
         .await
@@ -287,6 +289,7 @@ impl MyClient{
             .header("Content-Type","application/json")
             .header("Authorization",token)
             .header("lang",&self.lang)
+            .header("compression",&self.compression)")
             .json(&serde_json::json!({
                 "security":"600036.XSHG",
                 "start_date": "2021-01-01",
@@ -298,10 +301,10 @@ impl MyClient{
             .send()
             .await
             .expect("send db get_price ->");
-            let  text = response.text().await.unwrap(); 
+            let  raw_bytes = response.bytes().await.unwrap().to_vec(); //
+            let decoded: Vec<u8> = zstd::decode_all(raw_bytes.as_slice()).unwrap();
+            let text = std::str::from_utf8(&decoded).unwrap();
             let costtime = sys_time.elapsed().unwrap();
-            println!("cost time :{:?}",costtime);
-            return text
         }else{
             return "get_price Error".into()
         }
