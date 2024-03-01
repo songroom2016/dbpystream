@@ -134,7 +134,7 @@ code : 159707.XSHE df shape : (52320, 8)
 ## web api使用提醒
 本数据服务提供现成sdk模式服务，同时支持restful api调用。但需要注意：
 
-- 可以在headers中提供"decompress"字段，可选为"gzip"和"zstd".默认为"gzip"。如果需要更好的性能，可选"zstd"，但是需要进行相应的zstd模式下的解压。
+- 可以在headers中提供"compression"字段，可选为"gzip"和"zstd".默认为"gzip"。如果需要更好的性能，可选"zstd"，但是需要进行相应的zstd模式下的解压。
 - 可以在headers中提供"lang"字段，可填写"python","rust","julia"等任何语言信息。如果填写"python"或不提供此字段，此默认前端为python语言调用，此时，前端需要进行pickle反序列化处理。
 
 
@@ -159,6 +159,7 @@ df   = pd.DataFrame(decompress_data) # 生产datafram
 # 需要注意的是，julia需要在request中传中lang字段信息，否则会得到无法反序列化的python pickle序列化的文件！不能填写""或"python"
 using HTTP;
 using JSON;
+using CodecZstd; 
 
 token = get_token();
 println("获得token : {}",token);
@@ -168,33 +169,42 @@ codes = get_all_securities(token,"stock","2021-02-01")
 println("数据如下：",data);
 
 function get_token()
-    url ="http://47.122.40.16/login";
-    username ="" # 根据已知的账户和密码填写
-    password ="" # 根据已知的账户和密码填写
-    params= Dict("username" => username,"password" =>password,"mac" =>"","request_id"=>"") # username和password必填
-    res = HTTP.post(url, body=JSON.json(params))
+    login_url ="http://47.122.40.16/login";
+    username ="***********" #据实填写，下同
+    password ="**********"
+    params= Dict("username" => username,"password" =>password)
+    res = HTTP.post( login_url, body=JSON.json(params))
     text = String(res.body)
     return text 
 end
 function get_price(token)
-    url  ="http://47.122.40.16/history_price";
-     headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"mac"=>"","request_id"=>"","lang" =>"julia") # "Authorization"为必填字段
-    # 根据自已需求设置参数
+    get_price_url  ="http://47.122.40.16/history_price";
+    headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"lang" =>"julia","compression"=>"zstd") ## 可以选择两种压缩方式
     params  = Dict("security" => "600036.XSHG",
     "start_date"=> "2021-01-01",
-    "end_date"=>"2021-01-07",
-    "frequency"=>"daily",
+    "end_date"=>"2022-01-07",
+    "frequency"=>"minute",
     "fq"=>"pre",
-    "fields"=>"None");
-    res = HTTP.request("POST",url, body=JSON.json(params),headers = headers)#,response_stream=stream,decompress=false)
-    return String(res.body)
+    "fields"=>"None"); ##根据自己的设置来填写参数
+    res = HTTP.request("POST",get_price_url, body=JSON.json(params),headers = headers)
+    data = res.body
+    if "compression" in keys(headers) && headers["compression"] == "zstd"
+        return String(transcode(ZstdDecompressor, data))
+    else
+        return data
+    end
 end
+
 function get_all_securities(token::String,code::String,date::String)
     url  = "http://47.122.40.16/all_securities";
-    headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"mac"=>"","request_id"=>"","lang" =>"julia")
+    headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"lang" =>"julia","compression"=>"zstd")
     params  = Dict("types" => code,"date" =>date);
-    res = HTTP.post(url, body=JSON.json(params),headers =headers)
-    return String(res.body);
+    data = HTTP.post(url, body=JSON.json(params),headers =headers)
+    if "compression" in keys(headers) && headers["compression"] == "zstd"
+        return String(transcode(ZstdDecompressor, data))
+    else
+        return data.body
+    end
 end
 
 
