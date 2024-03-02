@@ -228,7 +228,7 @@ async fn main() -> Result<(), reqwest::Error> {
     println!("token :{:?}",myclient.token);
     let data = myclient.get_price().await;
     let costtime = sys_time.elapsed().unwrap();
-    println!("cost time :{:?} count :{:?}",costtime);
+    println!("cost time :{:?} ",costtime);
     Ok(())
 }
 
@@ -290,7 +290,7 @@ impl MyClient{
             .header("Content-Type","application/json")
             .header("Authorization",token)
             .header("lang",&self.lang)
-            .header("compression",&self.compression)")
+            .header("compression",&self.compression)
             .json(&serde_json::json!({
                 "security":"600036.XSHG",
                 "start_date": "2021-01-01",
