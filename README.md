@@ -1,4 +1,5 @@
-# 特别说明：本库仅提供企业内部服务，不向外部提供商业性的数据服务和支持
+# dbpystream 说明 
+特别说明：本库仅提供企业内部服务，不向外部提供商业性的数据服务和支持
 
 dbpystream API 主要为已经购买了数据供应商API服务的企业内部提供向自己员工内部的数据服务的API接口，这种服务是一种API的镜像服务。
 
@@ -210,12 +211,32 @@ end
 ```
 ## rust web api 模式
 
+cargo.toml文件如下：
+```rust
+
+[package]
+name = "demo"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.0.0",  features = ["full", "tracing"] }
+serde = "1.0.55"
+serde_derive = "1.0"
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["json", "multipart"] }
+zstd = "0.13.0"
+```
+main.rs文件如下：
+
 ```rust
 // 注意headers中lang和compression字段的设置。
 // 这里采用了tokio异步框架方式，也可以选择纯reqwest库的方式。
-use reqwest::{self, Client,Response};
+use reqwest::{self, Client};
+use std::io;
 use std::time::{Duration, SystemTime};
-use ruzstd::frame_decoder::{self,BlockDecodingStrategy};
 
 const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
 const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
@@ -228,6 +249,7 @@ async fn main() -> Result<(), reqwest::Error> {
     println!("token :{:?}",myclient.token);
     let data = myclient.get_price().await;
     let costtime = sys_time.elapsed().unwrap();
+    println!("data :{:?}",data);
     println!("cost time :{:?} ",costtime);
     Ok(())
 }
@@ -239,8 +261,8 @@ struct MyClient{
     mac : String,
     requestid :String,
     token :Option<String>,
-    lang: String, //指前端开发语言,python,rust......
-    compression: String,
+    lang: String, //指前端开发语言,python,julia
+    compression : String,
 }
 #[derive(Debug)]
 struct Account{
@@ -250,8 +272,8 @@ struct Account{
 impl Account{
     pub fn default()->Self{
         Account{
-            username:"*******".into(),//根据真实信息情况填写
-            password:"*******".into(),//根据真实信息情况填写
+            username:"************".into(),
+            password:"************".into(),
         }
     }
 }
@@ -261,11 +283,11 @@ impl MyClient{
         MyClient{
             client: Client::new(),
             account: Account::default(),
-            mac : "".into(),//这个可随便填
-            requestid: "1".into(),//这个可随便填写
+            mac : "".into(),//这个无所谓，原来是想让server记住客户端mac信息
+            requestid: "1".into(),//这个也无所谓
             token: None,
             lang :"rust".into(),
-            compression:"zstd".into(),
+            compression : "zstd".into(),
         }
     } 
 
@@ -280,6 +302,7 @@ impl MyClient{
         .send()
         .await
         .expect("send login->");
+        //println!("response :{:?}",response);
         self.token = Some(response.text().await.unwrap());
     }
     async fn get_price(&mut self) ->String {
@@ -302,7 +325,7 @@ impl MyClient{
             .send()
             .await
             .expect("send db get_price ->");
-            let  raw_bytes = response.bytes().await.unwrap().to_vec(); //
+            let  raw_bytes = response.bytes().await.unwrap().to_vec(); 
             let decoded: Vec<u8> = zstd::decode_all(raw_bytes.as_slice()).unwrap();
             let text = std::str::from_utf8(&decoded).unwrap();
             let costtime = sys_time.elapsed().unwrap();
@@ -311,11 +334,54 @@ impl MyClient{
         }else{
             return "get_price Error".into()
         }
-    }
-
+    }    
 }
-
 ```
-这样，你就可以开始使用dbpystream了。
+## 性能
+```python
+#主要函数性能如下:
+def test_get_price():
+    start_date = "2022-01-10" # 日期字符串格式
+    end_date   = "2023-01-30" # 日期字符串格式
+    frequency  = "minute" # daily
+    fq         = "pre"#"pre"#"post" # pre:前复权[默认]，None
+    codes = "600036.XSHG"
+    flds  = ["datetime","close"]
+    t0 = t.time()
+    df  = db.get_price(codes,start_date,end_date,frequency,fq) ## 返回pd.dataframe格式；
+    print(f"code : {codes} df shape : {df.shape} ")
+    print(f"-------------{fq}--------------------")
+    print(f"{df.head()}")
+    print(f"{df.tail()}")
+    print(f"--------------{fq}-------------------")
+    print(f"cost time :{t.time()-t0} seconds!")
+    
+if __name__== "__main__" :
+	db.auth(）
+    test_get_price()
+```
+输出：
+
+```python
+登陆成功！
+query -> url :  http://47.122.40.16/history_price 
+query -> data : {"security": "600036.XSHG", "start_date": "2022-01-10", "end_date": "2023-01-30", "frequency": "minute", "fq": "pre", "fields": null} method_name: get_price
+code : 600036.XSHG df shape : (60720, 7)
+-------------pre--------------------
+             datetime   open  close   high    low     volume        money
+0 2022-01-10 09:31:00  47.41  47.35  47.41  47.22  3133461.0  148370930.0
+1 2022-01-10 09:32:00  47.41  47.59  47.60  47.41  2024244.0   96189778.0
+2 2022-01-10 09:33:00  47.59  47.80  47.80  47.59  1498226.0   71496604.0
+3 2022-01-10 09:34:00  47.80  47.82  47.90  47.80  2136000.0  102250438.0
+4 2022-01-10 09:35:00  47.82  47.89  47.89  47.82  1458678.0   69824801.0
+                 datetime   open  close   high    low     volume        money
+60715 2023-01-30 14:56:00  41.98  42.00  42.02  41.98   542800.0   22797906.0
+60716 2023-01-30 14:57:00  42.02  41.99  42.03  41.98   234600.0    9856293.0
+60717 2023-01-30 14:58:00  41.99  41.99  41.99  41.99        0.0          0.0
+60718 2023-01-30 14:59:00  41.99  41.99  41.99  41.99        0.0          0.0
+60719 2023-01-30 15:00:00  41.99  42.03  42.03  41.99  3058600.0  128552958.0
+--------------pre-------------------
+cost time :0.8377432823181152 seconds!
+```
 
 如果有任何问题，欢迎邮件至rustroom@163.com。
