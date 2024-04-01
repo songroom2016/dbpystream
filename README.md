@@ -237,6 +237,8 @@ main.rs文件如下：
 use reqwest::{self, Client};
 use std::io;
 use std::time::{Duration, SystemTime};
+use serde::{Serialize, Deserialize};
+use serde_json::Value;
 
 const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
 const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
@@ -248,8 +250,14 @@ async fn main() -> Result<(), reqwest::Error> {
     myclient.get_token().await;
     println!("token :{:?}",myclient.token);
     let data = myclient.get_price().await;
+    let json: Value = serde_json::from_str(&data).unwrap();
     let costtime = sys_time.elapsed().unwrap();
-    println!("data :{:?}",data);
+    if let Value::Object(data) = json {
+       let keys :Vec<&String>= data.keys().collect();
+       for key in keys{
+            println!("key :{:?}, data[key] :{:?}",key,data[key]);
+       }
+    }
     println!("cost time :{:?} ",costtime);
     Ok(())
 }
