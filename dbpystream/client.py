@@ -18,7 +18,7 @@ class LDClient(object):
     _threading_local = threading.local() 
     _auth_params = {}  
     _token = None
-    _host  = "http://47.122.40.16" 
+    _host  = "http://101.132.253.192"   #http://47.122.40.16" 2025-9-22:云ip变更
     _port  = 8080 
     _urls = utils.get_urls_from_methods(_host)
     _request_id_generator = itertools.count(random.choice(range(0, 100000, 100)))
