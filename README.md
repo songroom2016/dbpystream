@@ -170,7 +170,7 @@ codes = get_all_securities(token,"stock","2021-02-01")
 println("数据如下：",data);
 
 function get_token()
-    login_url ="http://47.122.40.16/login";
+    login_url =  "http://101.132.253.192/login"; # "http://47.122.40.16/login"[2025-9-22 update,下同]; 
     username ="***********" #据实填写，下同
     password ="**********"
     params= Dict("username" => username,"password" =>password)
@@ -179,7 +179,7 @@ function get_token()
     return text 
 end
 function get_price(token)
-    get_price_url  ="http://47.122.40.16/history_price";
+    get_price_url  ="http://101.132.253.192/history_price";
     headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"lang" =>"julia","compression"=>"zstd") ## 可以选择两种压缩方式
     params  = Dict("security" => "600036.XSHG",
     "start_date"=> "2021-01-01",
@@ -196,7 +196,7 @@ function get_price(token)
 end
 
 function get_all_securities(token::String,code::String,date::String)
-    url  = "http://47.122.40.16/all_securities";
+    url  = "http://101.132.253.192/all_securities";
     headers = Dict("Content-Type"=>"application/json","Authorization"=>token,"lang" =>"julia","compression"=>"zstd")
     params  = Dict("types" => code,"date" =>date);
     res = HTTP.post(url, body=JSON.json(params),headers =headers)
@@ -240,8 +240,8 @@ use std::time::{Duration, SystemTime};
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
-const LOGIN_URL :&'static str =  "http://47.122.40.16/login";
-const GET_PRICE_URL :&'static str =  "http://47.122.40.16/history_price";
+const LOGIN_URL :&'static str =  "http://101.132.253.192/login";
+const GET_PRICE_URL :&'static str =  "http://101.132.253.192/history_price";
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
@@ -372,7 +372,7 @@ if __name__== "__main__" :
 
 ```python
 登陆成功！
-query -> url :  http://47.122.40.16/history_price 
+query -> url :  http://101.132.253.192/history_price 
 query -> data : {"security": "600036.XSHG", "start_date": "2022-01-10", "end_date": "2023-01-30", "frequency": "minute", "fq": "pre", "fields": null} method_name: get_price
 code : 600036.XSHG df shape : (60720, 7)
 -------------pre--------------------
